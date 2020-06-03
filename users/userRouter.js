@@ -4,12 +4,18 @@ const router = express.Router();
 
 const Users = require('./userDb')
 
-router.post('/', (req, res) => {
+router.post('/', validateUser, (req, res) => {
   // do your magic!
-
+  Users.insert(req.body)
+    .then(user => {
+      res.status(200).json(user)
+    })
+    .catch(err => {
+      res.status(500).json({ message: "error creating new user on server" })
+    })
 });
 
-router.post('/:id/posts', (req, res) => {
+router.post('/:id/posts', validateUserId, (req, res) => {
   // do your magic!
 });
 
@@ -32,17 +38,43 @@ router.get('/', (req, res) => {
 
 router.get('/:id', validateUserId, (req, res) => {
   // do your magic!
+  //return the user object that was added to the request by the validateUserId middleware
+  res.status(200).json(req.user)
 });
 
-router.get('/:id/posts', (req, res) => {
+router.get('/:id/posts', validateUserId, (req, res) => {
   // do your magic!
+  Users.getUserPosts(req.user.id)
+    .then(posts => {
+      if (posts.length) {
+        res.status(200).json(posts)
+      }
+      else {
+        res.status(404).json({ message: `no posts found for ${user}` })
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: "error retrieving the posts from the server" })
+    })
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateUserId, (req, res) => {
   // do your magic!
+  Users.remove(req.user.id)
+    .then(count => {
+      if (count > 0) {
+        res.status(200).json(req.user)
+      }
+      else {
+        res.status(500).json({ message: "user was not removed from the database" })
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: "user was not removed from the database" })
+    })
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', validateUserId, (req, res) => {
   // do your magic!
 });
 
@@ -68,6 +100,15 @@ function validateUserId(req, res, next) {
 
 function validateUser(req, res, next) {
   // do your magic!
+  if (req.body['name']) {
+    next()
+  }
+  else if (req.body) {
+    res.status(400).json({ message: "missing required name field" })
+  }
+  else {
+    res.status(400).json({ message: "missing user data" })
+  }
 }
 
 function validatePost(req, res, next) {
