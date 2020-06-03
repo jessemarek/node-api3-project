@@ -15,7 +15,7 @@ router.post('/', validateUser, (req, res) => {
     })
 });
 
-router.post('/:id/posts', validateUserId, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
   // do your magic!
 });
 
@@ -74,8 +74,15 @@ router.delete('/:id', validateUserId, (req, res) => {
     })
 });
 
-router.put('/:id', validateUserId, (req, res) => {
+router.put('/:id', validateUserId, validateUser, (req, res) => {
   // do your magic!
+  Users.update(req.user.id, req.body)
+    .then(count => {
+      res.status(200).json({ ...req.user, name: req.body.name })
+    })
+    .catch(err => {
+      res.status(500).json({ message: "error could not update user on server" })
+    })
 });
 
 //custom middleware
@@ -113,6 +120,16 @@ function validateUser(req, res, next) {
 
 function validatePost(req, res, next) {
   // do your magic!
+  if (req.body['text']) {
+    next()
+  }
+  else if (req.body) {
+    res.status(400).json({ message: "missing required text field" })
+  }
+  else {
+    res.status(400).json({ message: "missing post data" })
+  }
 }
+
 
 module.exports = router;
