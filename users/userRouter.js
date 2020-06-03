@@ -71,7 +71,7 @@ router.delete('/:id', validateUserId, (req, res) => {
   // do your magic!
   Users.remove(req.user.id)
     .then(count => {
-      if (count > 0) {
+      if (count) {
         res.status(200).json(req.user)
       }
       else {
